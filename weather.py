@@ -2,15 +2,17 @@
 #  Author : Max Besley
 #  Purpose: Tells you the weather through the command line
 
-import requests
-from pprint import pprint
 from argparse import ArgumentParser
+from pprint import pprint
+import requests
+import json
+
+# constants
+BASE_URL = 'http://api.openweathermap.org/data/2.5/weather?'
+JSON_FILENAME = 'countries.json'
 
 
 def main():
-    # constants
-    BASE_URL = 'http://api.openweathermap.org/data/2.5/weather?'
-
     # handle CLI arguments
     parser = ArgumentParser()
     parser.add_argument('api_key')
@@ -19,33 +21,31 @@ def main():
     parser.add_argument('-d', '--description', action='store_true')
     parser.add_argument('-f', '--fahrenheit', action='store_true')
 
-    args = parser.parse_args()
-    API_KEY   = args.api_key
+    args      = parser.parse_args()
+    api_key   = args.api_key
     city_name = args.city
 
     # get weather data over the network
-    FINAL_URL = BASE_URL + 'appid=' + API_KEY + '&q=' + city_name
-    weather_data = requests.get(FINAL_URL).json()
+    final_url    = f"{BASE_URL}appid={api_key}&q={city_name}"
+    weather_data = requests.get(final_url).json()
 
     # extract from the JSON data
-    temp    = weather_data['main']['temp']
-    country = weather_data['sys']['country']
-    if args.fahrenheit:
-        temp = kelvin_to_fahrenheit(temp)
-    else:
-        temp = kelvin_to_celsius(temp)
-
+    klvn = weather_data['main']['temp']  # in kelvin
+    temp = kelvin_to_fahrenheit(klvn) if args.fahrenheit else kelvin_to_celsius(klvn)
+    country_code = weather_data['sys']['country']
+    country_name = country_code_to_name(country_code)
 
     # final output
     print('----------------------------------------------')
     print(f"Place:    {city_name}")
-    print(f"Country:    {country}")
+    print(f"Country:    {country_name}")
     print(f"Temperature:    {temp}")
 
+    if args.description:
+        pass
+
     if args.all:
-        print()
-        pprint(weather_data)
-        print()
+        print(); pprint(weather_data); print()
 
     print('----------------------------------------------')
 
@@ -56,6 +56,17 @@ def kelvin_to_fahrenheit(k):
 def kelvin_to_celsius(k):
     return k - 273.15
 
+def country_code_to_name(country_code):
+    with open(JSON_FILENAME) as json_file:
+        countries = json.load(json_file)
 
+    for country in countries:
+        if country['Code'] == country_code:
+            country_name = country['Name']
+            break
+    return country_name
+
+
+# program entry point
 if __name__ == "__main__":
     main()
