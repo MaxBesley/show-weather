@@ -4,7 +4,7 @@ with open('README.md', 'r', encoding='utf-8') as readme:
     LONG_DESCRIPTION = '\n' + readme.read()
 
 DESCRIPTION = 'Tells you the weather of any city/town anywhere in the world over the command line'
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 
 
 setup(
